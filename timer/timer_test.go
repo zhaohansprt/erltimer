@@ -65,6 +65,6 @@ func testwraper(du time.Duration, fmod string) {
 }
 
 func useExample(du time.Duration, fmod string)  {
-	t := NewTimertest(du, fmod)
+	t := NewTimertest(du, fmod) //just like time.NewTimer(du)
 	<-t.C
 }
