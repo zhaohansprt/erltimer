@@ -7,6 +7,33 @@ import (
 	"time"
 )
 
+//make sure Start before you use NewTimer
+func Start(i int) {
+	loop(i, time.Nanosecond)
+}
+
+//just like the time.NewTimer(du) does
+func NewTimer(du time.Duration) (ert ErlTimer) {
+	if du <= 0 {
+		ert.C = make(chan uint8, 1)
+		close(ert.C)
+		return
+	}
+	ert.C = make(chan uint8, 1)
+	ert.ts = time.Now().UnixNano() + int64(du)
+
+	emit(&ert)
+
+	return
+}
+
+//to see the wheel queue
+func Stats() int {
+	fmt.Printf("	timer wheel ETS length:%v \n", cks[0].ets.Len())
+	return cks[0].ets.Len()
+}
+
+////////////////////////////////internal uses//////////////////
 var cks = []*chanlocker{}
 
 type chanlocker struct {
@@ -47,15 +74,6 @@ func initchlocker() (ch chanlocker) {
 	return
 }
 
-func Start(i int) {
-	loop(i, time.Nanosecond)
-}
-
-func Stats() int {
-	fmt.Printf("	timer wheel ETS length:%v \n", cks[0].ets.Len())
-	return cks[0].ets.Len()
-}
-
 func emit(timer *ErlTimer) {
 	cks[rand.Intn(len(cks))].channel <- timer
 }
@@ -90,20 +108,6 @@ func NewTimerTest(du time.Duration, trace string) (ert ErlTimer) {
 		return
 	}
 	ert.TrackMark = trace
-	ert.C = make(chan uint8, 1)
-	ert.ts = time.Now().UnixNano() + int64(du)
-
-	emit(&ert)
-
-	return
-}
-
-func NewTimer(du time.Duration) (ert ErlTimer) {
-	if du <= 0 {
-		ert.C = make(chan uint8, 1)
-		close(ert.C)
-		return
-	}
 	ert.C = make(chan uint8, 1)
 	ert.ts = time.Now().UnixNano() + int64(du)
 
