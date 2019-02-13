@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//make sure Start before you use NewTimer
+//make sure to Start before you use NewTimer
 func Start(i int) {
 	loop(i, time.Nanosecond)
 }
@@ -78,7 +78,7 @@ func emit(timer *ErlTimer) {
 	cks[rand.Intn(len(cks))].channel <- timer
 }
 
-//多开
+//多开  duration is deprecated
 func loop(num int, duration time.Duration) {
 	for ; num > 0; num-- {
 		obj := initchlocker()
