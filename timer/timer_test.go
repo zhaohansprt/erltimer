@@ -43,7 +43,7 @@ func Test_NewTimer(t *testing.T) {
 
 	for {
 		time.Sleep(time.Second)
-		if Stats()==0{
+		if Stats() == 0 {
 			return
 		}
 		time.Sleep(3 * time.Second)
@@ -53,10 +53,10 @@ func Test_NewTimer(t *testing.T) {
 
 func testwraper(du time.Duration, fmod string) {
 	wall := time.Now()
-	useExample(du,fmod)
+	useExample(du, fmod)
 	inter := time.Now().Sub(wall)
 	msg := fmt.Sprintf("espect inter:%v   actual inter:%v \n", du, inter)
-	if du < inter+(2000*time.Microsecond) && du > inter-(2000*time.Microsecond) {//windows 下误差在2毫秒之间
+	if du < inter+(2000*time.Microsecond) && du > inter-(2000*time.Microsecond) { //windows 下误差在2毫秒之间
 		fmt.Println(fmod, " passed !!!\n", msg)
 	} else {
 		panic(fmod + " failed !!!\n" + msg)
@@ -64,7 +64,7 @@ func testwraper(du time.Duration, fmod string) {
 
 }
 
-func useExample(du time.Duration, fmod string)  {
-	t := NewTimertest(du, fmod) //just like time.NewTimer(du)
+func useExample(du time.Duration, fmod string) {
+	t := NewTimerTest(du, fmod) //just like time.NewTimer(du)
 	<-t.C
 }

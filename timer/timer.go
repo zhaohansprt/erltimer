@@ -47,12 +47,11 @@ func initchlocker() (ch chanlocker) {
 	return
 }
 
-
 func Start(i int) {
 	loop(i, time.Nanosecond)
 }
 
-func Stats() int{
+func Stats() int {
 	fmt.Printf("	timer wheel ETS length:%v \n", cks[0].ets.Len())
 	return cks[0].ets.Len()
 }
@@ -84,7 +83,7 @@ func (s ETS) Len() int           { return len(s) }
 func (s ETS) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s ETS) Less(i, j int) bool { return s[i].ts < s[j].ts }
 
-func NewTimertest(du time.Duration, trace string) (ert ErlTimer) {
+func NewTimerTest(du time.Duration, trace string) (ert ErlTimer) {
 	if du <= 0 {
 		ert.C = make(chan uint8, 1)
 		close(ert.C)
@@ -115,64 +114,72 @@ func NewTimer(du time.Duration) (ert ErlTimer) {
 
 const maxDuration time.Duration = 1<<63 - 1
 
-func sleep(tch *chanlocker, _ time.Duration) {
-	var ert, ert0 *ErlTimer
-	t := time.NewTimer(maxDuration)
+type State struct {
+	delta,
+	swap int64
+	ert,
+	ert0 *ErlTimer
+	t   *time.Timer
+	tch *chanlocker
+}
 
-	var delta, swap int64
+func (s *State) init(tch0 *chanlocker) {
+	s.t = time.NewTimer(maxDuration)
+	s.tch = tch0
+}
+
+func sleep(tch0 *chanlocker, _ time.Duration) {
+	state := new(State)
+	state.init(tch0)
+
 	for {
 		select {
-		case ert0 = <-tch.channel:
+		case state.ert0 = <-state.tch.channel:
 			switch {
-			case ert == nil:
-				delta = time.Now().UnixNano() - ert0.ts //处理 timer wheel 增量
-				if delta >= 0 {                         //tag1:
-					fmt.Println("delta guard failed ......!!!!!!!!!!!!!!!!!!!!!!!!!!! TrackMark: ", ert0.TrackMark)
-					close(ert0.C)
-				} else {
-					ert = ert0     //重置ert
-					tch.push(ert0) //入有序数组
-					t.Reset(time.Duration(-delta))
-				}
-			case ert.ts < 0:
+			case state.ert == nil:
+				handle0(state)
+			case state.ert.ts < 0:
 				panic("ts can't < 0")
 			default:
-				swap = ert.ts - ert0.ts
-				if swap > 0 {
-					delta = time.Now().UnixNano() - ert0.ts //处理 timer wheel 增量
-					if delta >= 0 {
-						fmt.Println("delta guard failed ......!!!!!!!!!!!!!!!!!!!!!!!!!!! TrackMark: ", ert0.TrackMark)
-						close(ert0.C)
-					} else {
-						//goto tag1
-						ert = ert0     //重置ert
-						tch.push(ert0) //入有序数组
-						t.Reset(time.Duration(-delta))
-					}
+				state.swap = state.ert.ts - state.ert0.ts
+				if state.swap > 0 {
+					handle0(state)
 				} else {
-					tch.push(ert0) //入有序数组
+					state.tch.push(state.ert0) //入有序数组
 
 				}
 
 			}
-		case <-t.C:
-			close(ert.C)
+		case <-state.t.C:
+			close(state.ert.C)
 		tag0:
-			if ert = tch.popmod(); ert != nil {
-				delta = time.Now().UnixNano() - ert.ts //处理 timer wheel 增量
-				if delta >= 0 {
-					close(ert.C)
+			if state.ert = state.tch.popmod(); state.ert != nil {
+				state.delta = time.Now().UnixNano() - state.ert.ts //处理 timer wheel 增量
+				if state.delta >= 0 {
+					close(state.ert.C)
 					//ert=nil//goto tagx1
 					goto tag0 //递回处理相同timer
 					//t.Reset(0)
 				} else {
-					t.Reset(time.Duration(-delta))
+					state.t.Reset(time.Duration(-state.delta))
 				}
 			} else {
-				t.Reset(maxDuration)
+				state.t.Reset(maxDuration)
 			}
 
 		}
 	}
 
+}
+
+func handle0(state *State) {
+	state.delta = time.Now().UnixNano() - state.ert0.ts //处理 timer wheel 增量
+	if state.delta >= 0 {                               //tag1:
+		fmt.Println("delta guard failed ......!!!!!!!!!!!!!!!!!!!!!!!!!!! TrackMark: ", state.ert0.TrackMark)
+		close(state.ert0.C)
+	} else {
+		state.ert = state.ert0     //重置ert
+		state.tch.push(state.ert0) //入有序数组
+		state.t.Reset(time.Duration(-state.delta))
+	}
 }
