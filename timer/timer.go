@@ -60,7 +60,7 @@ func emit(timer *ErlTimer) {
 	cks[rand.Intn(len(cks))].channel <- timer
 }
 
-//预留多开  当前不支持
+//多开
 func loop(num int, duration time.Duration) {
 	for ; num > 0; num-- {
 		obj := initchlocker()
