@@ -1,1 +1,1 @@
-module test/erltimer
+module erltimer

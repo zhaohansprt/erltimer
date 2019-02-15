@@ -1,9 +1,9 @@
 package timer
 
 import (
+	"erltimer/gen_server"
 	"fmt"
 	"sort"
-	"test/erltimer/gen_server"
 	"time"
 )
 
