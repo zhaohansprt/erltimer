@@ -6,9 +6,19 @@ import (
 	"time"
 )
 
-func init() {
+var st *Timer
 
-	Start(1)
+func init() {
+	st = new(Timer)
+	st.exstate = new(exstate)
+	st.exstate.ets = make(ETS, 0, 256)
+	st.Start(256)
+}
+
+//to see the wheel queue
+func Stats() int {
+	fmt.Printf("	timer wheel ETS length:%v \n", st.exstate.ets.Len())
+	return st.exstate.ets.Len()
 }
 func Test_NewTimer(t *testing.T) {
 	go testwraper(time.Minute+8*time.Second, fmt.Sprintf("minute test1"))
@@ -65,6 +75,6 @@ func testwraper(du time.Duration, fmod string) {
 }
 
 func useExample(du time.Duration, fmod string) {
-	t := NewTimerTest(du, fmod) //just like time.NewTimer(du)
+	t := st.NewTimerTest(du, fmod) //just like time.NewTimer(du)
 	<-t.C
 }
