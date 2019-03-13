@@ -1,6 +1,7 @@
 package timer
 
 import (
+	"container/heap"
 	"fmt"
 	"testing"
 	"time"
@@ -12,6 +13,7 @@ func init() {
 	st = new(Timer)
 	st.exstate = new(exstate)
 	st.exstate.ets = make(ETS, 0, 256)
+	heap.Init(&st.exstate.ets)
 	st.Start(256)
 }
 
@@ -66,7 +68,7 @@ func testwraper(du time.Duration, fmod string) {
 	useExample(du, fmod)
 	inter := time.Now().Sub(wall)
 	msg := fmt.Sprintf("espect inter:%v   actual inter:%v \n", du, inter)
-	if du < inter+(2000*time.Microsecond) && du > inter-(2000*time.Microsecond) { //windows 下误差在2毫秒之间
+	if inter < du+(4200*time.Microsecond) && inter > du-(2000*time.Microsecond) { //windows 下误差在2毫秒之间
 		fmt.Println(fmod, " passed !!!\n", msg)
 	} else {
 		panic(fmod + " failed !!!\n" + msg)

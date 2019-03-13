@@ -16,8 +16,8 @@ func (s *State) init(a Ainf) {
 }
 
 type Ainf interface {
-	Handle_msg(self, msg interface{}) time.Duration
-	Handle_timeout(self interface{}) time.Duration
+	Handle_msg(msg interface{}) time.Duration
+	Handle_timeout() time.Duration
 }
 
 func Serve(channel chan interface{}, exstate Ainf) {
@@ -33,10 +33,10 @@ func (state*State)sleep(channel chan interface{}) {
 	for {
 		select {
 		case msg = <-channel:
-			state.delta = state.Ainf.Handle_msg(state.Ainf, msg)
+			state.delta = state.Ainf.Handle_msg(msg)
 
 		case <-state.t.C:
-			state.delta = state.Ainf.Handle_timeout(state.Ainf)
+			state.delta = state.Ainf.Handle_timeout()
 
 		}
 		state.t.Reset(time.Duration(abs(int64(state.delta))))

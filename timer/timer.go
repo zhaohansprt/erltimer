@@ -1,9 +1,9 @@
 package timer
 
 import (
+	"container/heap"
 	"erltimer/gen_server"
 	"fmt"
-	"sort"
 	"time"
 )
 
@@ -47,8 +47,8 @@ func (et *Timer) NewTimerTest(du time.Duration, trace string) (ert ErlTimer) {
 	return
 }
 
-func (exstate) Handle_timeout(sinf interface{}) time.Duration {
-	state := sinf.(*exstate)
+func (state *exstate) Handle_timeout() time.Duration {
+	//state := sinf.(*exstate)
 	close(state.ert.C)
 tag0:
 	if state.ert = state.popmod(); state.ert != nil {
@@ -66,8 +66,8 @@ tag0:
 	}
 }
 
-func (exstate) Handle_msg(sinf, msg interface{}) time.Duration {
-	state := sinf.(*exstate)
+func (state *exstate) Handle_msg(msg interface{}) time.Duration {
+	//state := sinf.(*exstate)
 	ert0 := msg.(*ErlTimer)
 	switch {
 	case state.ert == nil:
@@ -108,36 +108,40 @@ type exstate struct {
 	ets ETS
 }
 
-func (ckobj *exstate) remove(i int) {
+func (ets0 *ETS) remove(i int) {
 	//ckobj.m.Lock()
 	//defer ckobj.m.Unlock()
+	ets:=*ets0
 	if i == 0 {
-		ckobj.ets = ckobj.ets[1:] //扔掉第一个
+		ets = ets[1:] //扔掉第一个
 		return
 	}
-	ckobj.ets = append(ckobj.ets[:i], ckobj.ets[i+1:]...)
-
+	ets = append(ets[:i], ets[i+1:]...)
+	*ets0=ets
 	return
 }
 
 //pop 修改版 先删除头部 再读取新头
 func (ckobj *exstate) popmod() *ErlTimer {
-	//ckobj.m.Lock()
-	//defer ckobj.m.Unlock()
-	ckobj.remove(0)
-	//fmt.Println("测试数组长度打印popmod", len(ckobj.ets))
+	heap.Remove(&ckobj.ets,0)
 	if len(ckobj.ets) == 0 {
 		return nil
 	}
 	return ckobj.ets[0]
 }
+func (h *ETS) Pop() interface{} {
+	old := *h
+	n := len(old)
+	//x := old[n-1]
+	*h = old[0 : n-1]
+	return old[n-1]
+}
+
 func (ckobj *exstate) push(et *ErlTimer) {
-	//ckobj.m.Lock()
-	//defer ckobj.m.Unlock()
-	ckobj.ets = append(ckobj.ets, et)
-	sort.Sort(ckobj.ets)
-	//fmt.Println("测试数组长度打印push", len(ckobj.ets))
-	return
+	heap.Push(&ckobj.ets, et)
+}
+func (ets *ETS) Push(et interface{}) {
+	*ets = append(*ets, et.(*ErlTimer))
 }
 
 //不支持多开 原因是 多个timer 不能共享同一个ets
