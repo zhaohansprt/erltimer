@@ -34,6 +34,9 @@
 
 **3.linux 下 高精度 high precision for linux  but do not use this in windows for milli precision (windows下受原生api的系统限制无法提供高精度只能精确到毫秒)**
 
+**4.小根堆保证高并发下的定时队列读写效率**
+
+**5. 底层基于erlang gen_server 式的actor设计实现**
 ## 用例 examples:
 
 请看 please see the  ./timer/timer_test.go
