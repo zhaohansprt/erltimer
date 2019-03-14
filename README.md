@@ -24,7 +24,8 @@
 </p>
 
 # erltimer
-
+## 注意 warning:
+ 实验阶段项目尚存bug只阐述思想并非实际可用的代码，如感兴趣可与作者联系获取可生产级别代码 （the code is experimental not usable）
 
 ## 特性 features:
 
